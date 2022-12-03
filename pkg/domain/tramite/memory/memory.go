@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/francoganga/go_reno/aggregate"
-	"github.com/francoganga/go_reno/domain/tramite"
+	"github.com/francoganga/go_reno2/pkg/aggregate"
+	"github.com/francoganga/go_reno2/pkg/domain/tramite"
 	"github.com/google/uuid"
 )
 

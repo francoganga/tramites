@@ -3,7 +3,7 @@ package tramite
 import (
 	"errors"
 
-	"github.com/francoganga/go_reno/aggregate"
+	"github.com/francoganga/go_reno2/pkg/aggregate"
 	"github.com/google/uuid"
 )
 
