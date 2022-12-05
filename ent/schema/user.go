@@ -42,6 +42,7 @@ func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("owner", PasswordToken.Type).
 			Ref("user"),
+        edge.To("tramites", Tramite.Type),
 	}
 }
 
