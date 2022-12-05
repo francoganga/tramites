@@ -6,5 +6,5 @@ type AreaSudocu string
 type Dependencia struct {
 	Nombre      string
 	AreaSudocu  AreaSudocu
-	Autorizante user.User
+	Autorizante *user.User
 }

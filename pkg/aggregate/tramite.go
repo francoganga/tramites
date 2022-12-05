@@ -1,19 +1,22 @@
 package aggregate
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/francoganga/go_reno2/pkg/domain/candidato"
 	"github.com/francoganga/go_reno2/pkg/domain/dependencia"
 	"github.com/francoganga/go_reno2/pkg/domain/materia"
 	"github.com/francoganga/go_reno2/pkg/domain/user"
-	"github.com/francoganga/go_reno2/internal"
+	"github.com/francoganga/go_reno2/pkg/random"
 	"github.com/google/uuid"
 )
 
 type Event interface {
 	isEvent()
+    String() string
 }
 
 type Categoria string
@@ -33,6 +36,19 @@ type Tramite struct {
 	Dependencia       *dependencia.Dependencia
 	Materias          []*materia.Materia
 	categoria         Categoria
+	version           int
+}
+
+type eventID uuid.UUID
+
+type ObservationAdded struct {
+    ID string
+    Content string
+}
+
+func (e ObservationAdded) isEvent() {}
+func (e ObservationAdded) String() string {
+    return reflect.TypeOf(e).Name()
 }
 
 func New(
@@ -44,7 +60,7 @@ func New(
 	categoria Categoria,
 ) Tramite {
 
-	rs, err := internal.GenerateRandomBytes(18)
+	rs, err := random.GenerateRandomBytes(18)
 
 	if err != nil {
 		panic(err)
@@ -67,5 +83,50 @@ func New(
 }
 
 func (t *Tramite) GetID() uuid.UUID {
-    return t.Id
+	return t.Id
+}
+
+func (t *Tramite) AddObservation(content string) error {
+    t.raise(&ObservationAdded{
+        ID: uuid.New().String(),
+        Content: content,
+    })
+
+    return nil
+}
+
+
+func (t *Tramite) On(event Event, new bool) {
+    switch e := event.(type) {
+    case *ObservationAdded:
+        t.Observaciones = append(t.Observaciones, e.Content)
+    }
+
+    if !new {
+        t.version++
+    }
+}
+
+func (t *Tramite) raise(event Event) {
+    t.events = append(t.events, event)
+    t.On(event, true)
+}
+
+func (t *Tramite) PrintEvents() string {
+    s := "["
+    for _, e := range t.events {
+        j, err := json.Marshal(e)
+        if err != nil {
+            panic(err)
+        }
+
+        s += e.String()
+
+        s += ": "
+
+        s += string(j)
+        s += ", "
+    }
+    s += "]"
+    return s
 }
