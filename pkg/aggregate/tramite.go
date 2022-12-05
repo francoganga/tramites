@@ -16,7 +16,7 @@ import (
 
 type Event interface {
 	isEvent()
-    String() string
+	String() string
 }
 
 type Categoria string
@@ -24,31 +24,43 @@ type Categoria string
 // type Contratacion
 // type Solicitud
 type Tramite struct {
-	Id                uuid.UUID
-	AnoProsupuestario int
-	Observaciones     []string
-	Link              string
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
-	candidato         *candidato.Candidato
-	events            []Event
-	autor             *user.User
-	Dependencia       *dependencia.Dependencia
-	Materias          []*materia.Materia
-	categoria         Categoria
-	version           int
+	Id                      uuid.UUID
+	AnoProsupuestario       int
+	Observaciones           []string
+	Link                    string
+	CreatedAt               time.Time
+	UpdatedAt               time.Time
+	candidato               *candidato.Candidato
+	events                  []Event
+	autor                   *user.User
+	Dependencia             *dependencia.Dependencia
+	Materias                []*materia.Materia
+	categoria               Categoria
+	SolicitudContratacionID string
+	estado                  string
+	version                 int
 }
 
 type eventID uuid.UUID
 
 type ObservationAdded struct {
-    ID string
-    Content string
+	ID      string
+	Content string
 }
 
 func (e ObservationAdded) isEvent() {}
 func (e ObservationAdded) String() string {
-    return reflect.TypeOf(e).Name()
+	return reflect.TypeOf(e).Name()
+}
+
+type TramiteIniciado struct {
+	ID                      string
+	SolicitudContratacionID string
+}
+
+func (e TramiteIniciado) isEvent() {}
+func (e TramiteIniciado) String() string {
+	return reflect.TypeOf(e).Name()
 }
 
 func New(
@@ -87,46 +99,57 @@ func (t *Tramite) GetID() uuid.UUID {
 }
 
 func (t *Tramite) AddObservation(content string) error {
-    t.raise(&ObservationAdded{
-        ID: uuid.New().String(),
-        Content: content,
-    })
+	t.raise(&ObservationAdded{
+		ID:      uuid.New().String(),
+		Content: content,
+	})
 
-    return nil
+	return nil
 }
 
+func (t *Tramite) IniciarTramite(solicitudID string) error {
+	t.raise(&TramiteIniciado{
+		ID:                      uuid.New().String(),
+		SolicitudContratacionID: solicitudID,
+	})
+
+	return nil
+}
 
 func (t *Tramite) On(event Event, new bool) {
-    switch e := event.(type) {
-    case *ObservationAdded:
-        t.Observaciones = append(t.Observaciones, e.Content)
-    }
+	switch e := event.(type) {
+	case *ObservationAdded:
+		t.Observaciones = append(t.Observaciones, e.Content)
+	case *TramiteIniciado:
+		t.SolicitudContratacionID = e.SolicitudContratacionID
+		t.estado = "tramite_iniciado"
+	}
 
-    if !new {
-        t.version++
-    }
+	if !new {
+		t.version++
+	}
 }
 
 func (t *Tramite) raise(event Event) {
-    t.events = append(t.events, event)
-    t.On(event, true)
+	t.events = append(t.events, event)
+	t.On(event, true)
 }
 
 func (t *Tramite) PrintEvents() string {
-    s := "["
-    for _, e := range t.events {
-        j, err := json.Marshal(e)
-        if err != nil {
-            panic(err)
-        }
+	s := "["
+	for _, e := range t.events {
+		j, err := json.Marshal(e)
+		if err != nil {
+			panic(err)
+		}
 
-        s += e.String()
+		s += e.String()
 
-        s += ": "
+		s += ": "
 
-        s += string(j)
-        s += ", "
-    }
-    s += "]"
-    return s
+		s += string(j)
+		s += ", "
+	}
+	s += "]"
+	return s
 }
