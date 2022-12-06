@@ -1,6 +1,7 @@
 package aggregate
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -21,6 +22,22 @@ type Event interface {
 
 type Categoria string
 
+type UJson map[string]string
+
+func (j *UJson) Scan(val string) error {
+
+    return json.Unmarshal([]byte(val), &j)
+}
+
+func (pc *UJson) Value() (driver.Value, error) {
+	return json.Marshal(pc)
+}
+
+func NewJson(v map[string]string) UJson {
+    return UJson(v)
+}
+
+
 // type Contratacion
 // type Solicitud
 type Tramite struct {
@@ -30,15 +47,15 @@ type Tramite struct {
 	Link                    string
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
-	candidato               *candidato.Candidato
-	events                  []Event
-	autor                   *user.User
+	Candidato               *candidato.Candidato
+	Events                  []Event
+	Autor                   *user.User
 	Dependencia             *dependencia.Dependencia
 	Materias                []*materia.Materia
-	categoria               Categoria
+	Categoria               Categoria
 	SolicitudContratacionID string
-	estado                  string
-	version                 int
+	Estado                  string
+	Version                 int
 }
 
 type eventID uuid.UUID
@@ -85,12 +102,12 @@ func New(
 		Link:              fmt.Sprintf("%x", rs),
 		CreatedAt:         time.Now(),
 		UpdatedAt:         time.Now(),
-		candidato:         candidato,
-		events:            make([]Event, 0),
-		autor:             autor,
+		Candidato:         candidato,
+		Events:            make([]Event, 0),
+		Autor:             autor,
 		Dependencia:       dependencia,
 		Materias:          materias,
-		categoria:         categoria,
+		Categoria:         categoria,
 	}
 }
 
@@ -122,22 +139,22 @@ func (t *Tramite) On(event Event, new bool) {
 		t.Observaciones = append(t.Observaciones, e.Content)
 	case *TramiteIniciado:
 		t.SolicitudContratacionID = e.SolicitudContratacionID
-		t.estado = "tramite_iniciado"
+		t.Estado = "tramite_iniciado"
 	}
 
 	if !new {
-		t.version++
+		t.Version++
 	}
 }
 
 func (t *Tramite) raise(event Event) {
-	t.events = append(t.events, event)
+	t.Events = append(t.Events, event)
 	t.On(event, true)
 }
 
 func (t *Tramite) PrintEvents() string {
 	s := "["
-	for _, e := range t.events {
+	for _, e := range t.Events {
 		j, err := json.Marshal(e)
 		if err != nil {
 			panic(err)

@@ -1,6 +1,7 @@
 package tramite
 
 import (
+	"context"
 	"errors"
 
 	"github.com/francoganga/go_reno2/pkg/aggregate"
@@ -15,7 +16,6 @@ var (
 
 
 type TramiteRepository interface {
-    Get(uuid.UUID) (aggregate.Tramite, error)
-    Add(aggregate.Tramite) error
-    Update(aggregate.Tramite) error
+    Get(context.Context, uuid.UUID) (aggregate.Tramite, error)
+    Save(aggregate.Tramite) error
 }

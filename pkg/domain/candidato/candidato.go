@@ -20,8 +20,8 @@ type Candidato struct {
 	Archivos []FilePath
 }
 
-func New(nombre CandidatoNombre, apellido Apellido, email CandidatoEmail) Candidato {
-    return Candidato{
+func New(nombre CandidatoNombre, apellido Apellido, email CandidatoEmail) *Candidato {
+    return &Candidato{
         Nombre: nombre,
         Apellido: apellido,
         Email: email,
