@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/francoganga/go_reno2/ent/event"
 	"github.com/francoganga/go_reno2/ent/tramite"
 	"github.com/google/uuid"
 )
@@ -85,6 +86,21 @@ func (tc *TramiteCreate) SetNillableID(u *uuid.UUID) *TramiteCreate {
 		tc.SetID(*u)
 	}
 	return tc
+}
+
+// AddEventIDs adds the "events" edge to the Event entity by IDs.
+func (tc *TramiteCreate) AddEventIDs(ids ...int) *TramiteCreate {
+	tc.mutation.AddEventIDs(ids...)
+	return tc
+}
+
+// AddEvents adds the "events" edges to the Event entity.
+func (tc *TramiteCreate) AddEvents(e ...*Event) *TramiteCreate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return tc.AddEventIDs(ids...)
 }
 
 // Mutation returns the TramiteMutation object of the builder.
@@ -164,6 +180,14 @@ func (tc *TramiteCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (tc *TramiteCreate) defaults() {
+	if _, ok := tc.mutation.CreatedAt(); !ok {
+		v := tramite.DefaultCreatedAt()
+		tc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := tc.mutation.UpdatedAt(); !ok {
+		v := tramite.DefaultUpdatedAt()
+		tc.mutation.SetUpdatedAt(v)
+	}
 	if _, ok := tc.mutation.ID(); !ok {
 		v := tramite.DefaultID()
 		tc.mutation.SetID(v)
@@ -177,6 +201,12 @@ func (tc *TramiteCreate) check() error {
 	}
 	if _, ok := tc.mutation.Link(); !ok {
 		return &ValidationError{Name: "link", err: errors.New(`ent: missing required field "Tramite.link"`)}
+	}
+	if _, ok := tc.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Tramite.created_at"`)}
+	}
+	if _, ok := tc.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Tramite.updated_at"`)}
 	}
 	if _, ok := tc.mutation.Categoria(); !ok {
 		return &ValidationError{Name: "categoria", err: errors.New(`ent: missing required field "Tramite.categoria"`)}
@@ -243,6 +273,25 @@ func (tc *TramiteCreate) createSpec() (*Tramite, *sqlgraph.CreateSpec) {
 	if value, ok := tc.mutation.Version(); ok {
 		_spec.SetField(tramite.FieldVersion, field.TypeInt, value)
 		_node.Version = value
+	}
+	if nodes := tc.mutation.EventsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tramite.EventsTable,
+			Columns: []string{tramite.EventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: event.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

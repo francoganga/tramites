@@ -1,10 +1,22 @@
 package routes
 
 import (
+	"fmt"
 	"html/template"
 
+	"github.com/francoganga/go_reno2/pkg/aggregate"
+	_ "github.com/francoganga/go_reno2/pkg/aggregate"
 	"github.com/francoganga/go_reno2/pkg/controller"
 
+	"github.com/francoganga/go_reno2/pkg/domain/candidato"
+	_ "github.com/francoganga/go_reno2/pkg/domain/candidato"
+	"github.com/francoganga/go_reno2/pkg/domain/dependencia"
+	_ "github.com/francoganga/go_reno2/pkg/domain/dependencia"
+	"github.com/francoganga/go_reno2/pkg/domain/materia"
+	_ "github.com/francoganga/go_reno2/pkg/domain/materia"
+	"github.com/francoganga/go_reno2/pkg/domain/tramite/database"
+	"github.com/francoganga/go_reno2/pkg/domain/user"
+	_ "github.com/francoganga/go_reno2/pkg/domain/user"
 	"github.com/labstack/echo/v4"
 )
 
@@ -32,8 +44,56 @@ func (c *about) Get(ctx echo.Context) error {
 	page.Title = "About"
 
 	// This page will be cached!
-	page.Cache.Enabled = true
+	page.Cache.Enabled = false
 	page.Cache.Tags = []string{"page_about", "page:list"}
+
+    repo := database.DatabaseRepository{
+        ORM: c.Container.ORM,
+        DB: c.Container.Database,
+    }
+
+    ms := make([]*materia.Materia, 0)
+
+    a := aggregate.New(candidato.New("franco", "ganga", "asd@mail.com"), 2022, ms, user.New("admin"), &dependencia.Dependencia{Nombre: "ING", AreaSudocu: "aaa", Autorizante: user.New("admin")}, "LAAST")
+
+    a.AddObservation("una observacion2")
+    a.AddObservation("otra")
+    a.IniciarTramite("un uid")
+    fmt.Printf("[GET_AGGREGATE] a=%v", a.PrintEvents())
+
+    repo.Save(ctx.Request().Context(), a)
+
+    // ms := make([]*materia.Materia, 0)
+
+
+    // a := aggregate.New(candidato.New("franco", "ganga", "asd@mail.com"), 2022, ms, user.New("admin"), &dependencia.Dependencia{Nombre: "ING", AreaSudocu: "aaa", Autorizante: user.New("admin")}, "LAAST")
+    //
+    // err := repo.Add(ctx.Request().Context(), a)
+    //
+    // if err != nil {
+    //     return err
+    // }
+
+    // e, err := c.Container.ORM.Event.Create().SetType("tipo").SetPayload(map[string]string{"asasd": "ddddddddd"}).Save(ctx.Request().Context())
+    //
+    // if err != nil {
+    //     return err
+    // }
+    //
+    // t, err := c.Container.ORM.Tramite.Create().
+    // SetAnoPresupuestario(2022).
+    // SetCategoria("IEI").
+    // SetCreatedAt(time.Now()).
+    // SetLink("22222222").
+    // AddEvents(e).
+    // SetVersion(0).
+    // Save(ctx.Request().Context())
+    //
+    // if err != nil {
+    //     return err
+    // }
+    //
+    // fmt.Printf("t=%v", t)
 
 	// A simple example of how the Data field can contain anything you want to send to the templates
 	// even though you wouldn't normally send markup like this

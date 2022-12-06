@@ -28,6 +28,14 @@ func init() {
 	passwordtoken.DefaultCreatedAt = passwordtokenDescCreatedAt.Default.(func() time.Time)
 	tramiteFields := schema.Tramite{}.Fields()
 	_ = tramiteFields
+	// tramiteDescCreatedAt is the schema descriptor for created_at field.
+	tramiteDescCreatedAt := tramiteFields[3].Descriptor()
+	// tramite.DefaultCreatedAt holds the default value on creation for the created_at field.
+	tramite.DefaultCreatedAt = tramiteDescCreatedAt.Default.(func() time.Time)
+	// tramiteDescUpdatedAt is the schema descriptor for updated_at field.
+	tramiteDescUpdatedAt := tramiteFields[4].Descriptor()
+	// tramite.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	tramite.DefaultUpdatedAt = tramiteDescUpdatedAt.Default.(func() time.Time)
 	// tramiteDescID is the schema descriptor for id field.
 	tramiteDescID := tramiteFields[0].Descriptor()
 	// tramite.DefaultID holds the default value on creation for the id field.

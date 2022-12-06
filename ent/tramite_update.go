@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/francoganga/go_reno2/ent/event"
 	"github.com/francoganga/go_reno2/ent/predicate"
 	"github.com/francoganga/go_reno2/ent/tramite"
 )
@@ -61,12 +62,6 @@ func (tu *TramiteUpdate) SetNillableCreatedAt(t *time.Time) *TramiteUpdate {
 	return tu
 }
 
-// ClearCreatedAt clears the value of the "created_at" field.
-func (tu *TramiteUpdate) ClearCreatedAt() *TramiteUpdate {
-	tu.mutation.ClearCreatedAt()
-	return tu
-}
-
 // SetUpdatedAt sets the "updated_at" field.
 func (tu *TramiteUpdate) SetUpdatedAt(t time.Time) *TramiteUpdate {
 	tu.mutation.SetUpdatedAt(t)
@@ -78,12 +73,6 @@ func (tu *TramiteUpdate) SetNillableUpdatedAt(t *time.Time) *TramiteUpdate {
 	if t != nil {
 		tu.SetUpdatedAt(*t)
 	}
-	return tu
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (tu *TramiteUpdate) ClearUpdatedAt() *TramiteUpdate {
-	tu.mutation.ClearUpdatedAt()
 	return tu
 }
 
@@ -106,9 +95,45 @@ func (tu *TramiteUpdate) AddVersion(i int) *TramiteUpdate {
 	return tu
 }
 
+// AddEventIDs adds the "events" edge to the Event entity by IDs.
+func (tu *TramiteUpdate) AddEventIDs(ids ...int) *TramiteUpdate {
+	tu.mutation.AddEventIDs(ids...)
+	return tu
+}
+
+// AddEvents adds the "events" edges to the Event entity.
+func (tu *TramiteUpdate) AddEvents(e ...*Event) *TramiteUpdate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return tu.AddEventIDs(ids...)
+}
+
 // Mutation returns the TramiteMutation object of the builder.
 func (tu *TramiteUpdate) Mutation() *TramiteMutation {
 	return tu.mutation
+}
+
+// ClearEvents clears all "events" edges to the Event entity.
+func (tu *TramiteUpdate) ClearEvents() *TramiteUpdate {
+	tu.mutation.ClearEvents()
+	return tu
+}
+
+// RemoveEventIDs removes the "events" edge to Event entities by IDs.
+func (tu *TramiteUpdate) RemoveEventIDs(ids ...int) *TramiteUpdate {
+	tu.mutation.RemoveEventIDs(ids...)
+	return tu
+}
+
+// RemoveEvents removes "events" edges to Event entities.
+func (tu *TramiteUpdate) RemoveEvents(e ...*Event) *TramiteUpdate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return tu.RemoveEventIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -195,14 +220,8 @@ func (tu *TramiteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := tu.mutation.CreatedAt(); ok {
 		_spec.SetField(tramite.FieldCreatedAt, field.TypeTime, value)
 	}
-	if tu.mutation.CreatedAtCleared() {
-		_spec.ClearField(tramite.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := tu.mutation.UpdatedAt(); ok {
 		_spec.SetField(tramite.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if tu.mutation.UpdatedAtCleared() {
-		_spec.ClearField(tramite.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := tu.mutation.Categoria(); ok {
 		_spec.SetField(tramite.FieldCategoria, field.TypeString, value)
@@ -212,6 +231,60 @@ func (tu *TramiteUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := tu.mutation.AddedVersion(); ok {
 		_spec.AddField(tramite.FieldVersion, field.TypeInt, value)
+	}
+	if tu.mutation.EventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tramite.EventsTable,
+			Columns: []string{tramite.EventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: event.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedEventsIDs(); len(nodes) > 0 && !tu.mutation.EventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tramite.EventsTable,
+			Columns: []string{tramite.EventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: event.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.EventsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tramite.EventsTable,
+			Columns: []string{tramite.EventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: event.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -265,12 +338,6 @@ func (tuo *TramiteUpdateOne) SetNillableCreatedAt(t *time.Time) *TramiteUpdateOn
 	return tuo
 }
 
-// ClearCreatedAt clears the value of the "created_at" field.
-func (tuo *TramiteUpdateOne) ClearCreatedAt() *TramiteUpdateOne {
-	tuo.mutation.ClearCreatedAt()
-	return tuo
-}
-
 // SetUpdatedAt sets the "updated_at" field.
 func (tuo *TramiteUpdateOne) SetUpdatedAt(t time.Time) *TramiteUpdateOne {
 	tuo.mutation.SetUpdatedAt(t)
@@ -282,12 +349,6 @@ func (tuo *TramiteUpdateOne) SetNillableUpdatedAt(t *time.Time) *TramiteUpdateOn
 	if t != nil {
 		tuo.SetUpdatedAt(*t)
 	}
-	return tuo
-}
-
-// ClearUpdatedAt clears the value of the "updated_at" field.
-func (tuo *TramiteUpdateOne) ClearUpdatedAt() *TramiteUpdateOne {
-	tuo.mutation.ClearUpdatedAt()
 	return tuo
 }
 
@@ -310,9 +371,45 @@ func (tuo *TramiteUpdateOne) AddVersion(i int) *TramiteUpdateOne {
 	return tuo
 }
 
+// AddEventIDs adds the "events" edge to the Event entity by IDs.
+func (tuo *TramiteUpdateOne) AddEventIDs(ids ...int) *TramiteUpdateOne {
+	tuo.mutation.AddEventIDs(ids...)
+	return tuo
+}
+
+// AddEvents adds the "events" edges to the Event entity.
+func (tuo *TramiteUpdateOne) AddEvents(e ...*Event) *TramiteUpdateOne {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return tuo.AddEventIDs(ids...)
+}
+
 // Mutation returns the TramiteMutation object of the builder.
 func (tuo *TramiteUpdateOne) Mutation() *TramiteMutation {
 	return tuo.mutation
+}
+
+// ClearEvents clears all "events" edges to the Event entity.
+func (tuo *TramiteUpdateOne) ClearEvents() *TramiteUpdateOne {
+	tuo.mutation.ClearEvents()
+	return tuo
+}
+
+// RemoveEventIDs removes the "events" edge to Event entities by IDs.
+func (tuo *TramiteUpdateOne) RemoveEventIDs(ids ...int) *TramiteUpdateOne {
+	tuo.mutation.RemoveEventIDs(ids...)
+	return tuo
+}
+
+// RemoveEvents removes "events" edges to Event entities.
+func (tuo *TramiteUpdateOne) RemoveEvents(e ...*Event) *TramiteUpdateOne {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return tuo.RemoveEventIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -429,14 +526,8 @@ func (tuo *TramiteUpdateOne) sqlSave(ctx context.Context) (_node *Tramite, err e
 	if value, ok := tuo.mutation.CreatedAt(); ok {
 		_spec.SetField(tramite.FieldCreatedAt, field.TypeTime, value)
 	}
-	if tuo.mutation.CreatedAtCleared() {
-		_spec.ClearField(tramite.FieldCreatedAt, field.TypeTime)
-	}
 	if value, ok := tuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(tramite.FieldUpdatedAt, field.TypeTime, value)
-	}
-	if tuo.mutation.UpdatedAtCleared() {
-		_spec.ClearField(tramite.FieldUpdatedAt, field.TypeTime)
 	}
 	if value, ok := tuo.mutation.Categoria(); ok {
 		_spec.SetField(tramite.FieldCategoria, field.TypeString, value)
@@ -446,6 +537,60 @@ func (tuo *TramiteUpdateOne) sqlSave(ctx context.Context) (_node *Tramite, err e
 	}
 	if value, ok := tuo.mutation.AddedVersion(); ok {
 		_spec.AddField(tramite.FieldVersion, field.TypeInt, value)
+	}
+	if tuo.mutation.EventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tramite.EventsTable,
+			Columns: []string{tramite.EventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: event.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedEventsIDs(); len(nodes) > 0 && !tuo.mutation.EventsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tramite.EventsTable,
+			Columns: []string{tramite.EventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: event.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.EventsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tramite.EventsTable,
+			Columns: []string{tramite.EventsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: event.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Tramite{config: tuo.config}
 	_spec.Assign = _node.assignValues

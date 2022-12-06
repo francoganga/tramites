@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/francoganga/go_reno2/ent/event"
 	"github.com/francoganga/go_reno2/ent/observacion"
 	"github.com/francoganga/go_reno2/ent/passwordtoken"
 	"github.com/francoganga/go_reno2/ent/tramite"
@@ -34,6 +35,7 @@ type OrderFunc func(*sql.Selector)
 // columnChecker returns a function indicates if the column exists in the given column.
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
+		event.Table:         event.ValidColumn,
 		observacion.Table:   observacion.ValidColumn,
 		passwordtoken.Table: passwordtoken.ValidColumn,
 		tramite.Table:       tramite.ValidColumn,

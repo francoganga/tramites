@@ -4,12 +4,14 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/francoganga/go_reno2/ent/event"
 	"github.com/francoganga/go_reno2/ent/predicate"
 	"github.com/francoganga/go_reno2/ent/tramite"
 	"github.com/google/uuid"
@@ -24,6 +26,8 @@ type TramiteQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Tramite
+	withEvents *EventQuery
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -58,6 +62,28 @@ func (tq *TramiteQuery) Unique(unique bool) *TramiteQuery {
 func (tq *TramiteQuery) Order(o ...OrderFunc) *TramiteQuery {
 	tq.order = append(tq.order, o...)
 	return tq
+}
+
+// QueryEvents chains the current query on the "events" edge.
+func (tq *TramiteQuery) QueryEvents() *EventQuery {
+	query := &EventQuery{config: tq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tramite.Table, tramite.FieldID, selector),
+			sqlgraph.To(event.Table, event.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tramite.EventsTable, tramite.EventsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Tramite entity from the query.
@@ -241,11 +267,23 @@ func (tq *TramiteQuery) Clone() *TramiteQuery {
 		offset:     tq.offset,
 		order:      append([]OrderFunc{}, tq.order...),
 		predicates: append([]predicate.Tramite{}, tq.predicates...),
+		withEvents: tq.withEvents.Clone(),
 		// clone intermediate query.
 		sql:    tq.sql.Clone(),
 		path:   tq.path,
 		unique: tq.unique,
 	}
+}
+
+// WithEvents tells the query-builder to eager-load the nodes that are connected to
+// the "events" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TramiteQuery) WithEvents(opts ...func(*EventQuery)) *TramiteQuery {
+	query := &EventQuery{config: tq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withEvents = query
+	return tq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -321,15 +359,23 @@ func (tq *TramiteQuery) prepareQuery(ctx context.Context) error {
 
 func (tq *TramiteQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tramite, error) {
 	var (
-		nodes = []*Tramite{}
-		_spec = tq.querySpec()
+		nodes       = []*Tramite{}
+		withFKs     = tq.withFKs
+		_spec       = tq.querySpec()
+		loadedTypes = [1]bool{
+			tq.withEvents != nil,
+		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, tramite.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Tramite).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Tramite{config: tq.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -341,7 +387,46 @@ func (tq *TramiteQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tram
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := tq.withEvents; query != nil {
+		if err := tq.loadEvents(ctx, query, nodes,
+			func(n *Tramite) { n.Edges.Events = []*Event{} },
+			func(n *Tramite, e *Event) { n.Edges.Events = append(n.Edges.Events, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (tq *TramiteQuery) loadEvents(ctx context.Context, query *EventQuery, nodes []*Tramite, init func(*Tramite), assign func(*Tramite, *Event)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Tramite)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Event(func(s *sql.Selector) {
+		s.Where(sql.InValues(tramite.EventsColumn, fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.tramite_events
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "tramite_events" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "tramite_events" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (tq *TramiteQuery) sqlCount(ctx context.Context) (int, error) {

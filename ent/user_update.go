@@ -12,7 +12,9 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/francoganga/go_reno2/ent/passwordtoken"
 	"github.com/francoganga/go_reno2/ent/predicate"
+	"github.com/francoganga/go_reno2/ent/tramite"
 	"github.com/francoganga/go_reno2/ent/user"
+	"github.com/google/uuid"
 )
 
 // UserUpdate is the builder for updating User entities.
@@ -75,6 +77,21 @@ func (uu *UserUpdate) AddOwner(p ...*PasswordToken) *UserUpdate {
 	return uu.AddOwnerIDs(ids...)
 }
 
+// AddTramiteIDs adds the "tramites" edge to the Tramite entity by IDs.
+func (uu *UserUpdate) AddTramiteIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddTramiteIDs(ids...)
+	return uu
+}
+
+// AddTramites adds the "tramites" edges to the Tramite entity.
+func (uu *UserUpdate) AddTramites(t ...*Tramite) *UserUpdate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uu.AddTramiteIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -99,6 +116,27 @@ func (uu *UserUpdate) RemoveOwner(p ...*PasswordToken) *UserUpdate {
 		ids[i] = p[i].ID
 	}
 	return uu.RemoveOwnerIDs(ids...)
+}
+
+// ClearTramites clears all "tramites" edges to the Tramite entity.
+func (uu *UserUpdate) ClearTramites() *UserUpdate {
+	uu.mutation.ClearTramites()
+	return uu
+}
+
+// RemoveTramiteIDs removes the "tramites" edge to Tramite entities by IDs.
+func (uu *UserUpdate) RemoveTramiteIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveTramiteIDs(ids...)
+	return uu
+}
+
+// RemoveTramites removes "tramites" edges to Tramite entities.
+func (uu *UserUpdate) RemoveTramites(t ...*Tramite) *UserUpdate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uu.RemoveTramiteIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -265,6 +303,60 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.TramitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TramitesTable,
+			Columns: []string{user.TramitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: tramite.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedTramitesIDs(); len(nodes) > 0 && !uu.mutation.TramitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TramitesTable,
+			Columns: []string{user.TramitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: tramite.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.TramitesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TramitesTable,
+			Columns: []string{user.TramitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: tramite.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -331,6 +423,21 @@ func (uuo *UserUpdateOne) AddOwner(p ...*PasswordToken) *UserUpdateOne {
 	return uuo.AddOwnerIDs(ids...)
 }
 
+// AddTramiteIDs adds the "tramites" edge to the Tramite entity by IDs.
+func (uuo *UserUpdateOne) AddTramiteIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddTramiteIDs(ids...)
+	return uuo
+}
+
+// AddTramites adds the "tramites" edges to the Tramite entity.
+func (uuo *UserUpdateOne) AddTramites(t ...*Tramite) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uuo.AddTramiteIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -355,6 +462,27 @@ func (uuo *UserUpdateOne) RemoveOwner(p ...*PasswordToken) *UserUpdateOne {
 		ids[i] = p[i].ID
 	}
 	return uuo.RemoveOwnerIDs(ids...)
+}
+
+// ClearTramites clears all "tramites" edges to the Tramite entity.
+func (uuo *UserUpdateOne) ClearTramites() *UserUpdateOne {
+	uuo.mutation.ClearTramites()
+	return uuo
+}
+
+// RemoveTramiteIDs removes the "tramites" edge to Tramite entities by IDs.
+func (uuo *UserUpdateOne) RemoveTramiteIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveTramiteIDs(ids...)
+	return uuo
+}
+
+// RemoveTramites removes "tramites" edges to Tramite entities.
+func (uuo *UserUpdateOne) RemoveTramites(t ...*Tramite) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uuo.RemoveTramiteIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -543,6 +671,60 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: passwordtoken.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.TramitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TramitesTable,
+			Columns: []string{user.TramitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: tramite.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedTramitesIDs(); len(nodes) > 0 && !uuo.mutation.TramitesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TramitesTable,
+			Columns: []string{user.TramitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: tramite.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.TramitesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TramitesTable,
+			Columns: []string{user.TramitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: tramite.FieldID,
 				},
 			},
 		}

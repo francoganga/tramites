@@ -11,6 +11,7 @@ import (
 	"github.com/francoganga/go_reno2/ent/migrate"
 	"github.com/google/uuid"
 
+	"github.com/francoganga/go_reno2/ent/event"
 	"github.com/francoganga/go_reno2/ent/observacion"
 	"github.com/francoganga/go_reno2/ent/passwordtoken"
 	"github.com/francoganga/go_reno2/ent/tramite"
@@ -26,6 +27,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Event is the client for interacting with the Event builders.
+	Event *EventClient
 	// Observacion is the client for interacting with the Observacion builders.
 	Observacion *ObservacionClient
 	// PasswordToken is the client for interacting with the PasswordToken builders.
@@ -47,6 +50,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Event = NewEventClient(c.config)
 	c.Observacion = NewObservacionClient(c.config)
 	c.PasswordToken = NewPasswordTokenClient(c.config)
 	c.Tramite = NewTramiteClient(c.config)
@@ -84,6 +88,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:           ctx,
 		config:        cfg,
+		Event:         NewEventClient(cfg),
 		Observacion:   NewObservacionClient(cfg),
 		PasswordToken: NewPasswordTokenClient(cfg),
 		Tramite:       NewTramiteClient(cfg),
@@ -107,6 +112,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:           ctx,
 		config:        cfg,
+		Event:         NewEventClient(cfg),
 		Observacion:   NewObservacionClient(cfg),
 		PasswordToken: NewPasswordTokenClient(cfg),
 		Tramite:       NewTramiteClient(cfg),
@@ -117,7 +123,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Observacion.
+//		Event.
 //		Query().
 //		Count(ctx)
 //
@@ -140,10 +146,101 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Event.Use(hooks...)
 	c.Observacion.Use(hooks...)
 	c.PasswordToken.Use(hooks...)
 	c.Tramite.Use(hooks...)
 	c.User.Use(hooks...)
+}
+
+// EventClient is a client for the Event schema.
+type EventClient struct {
+	config
+}
+
+// NewEventClient returns a client for the Event from the given config.
+func NewEventClient(c config) *EventClient {
+	return &EventClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `event.Hooks(f(g(h())))`.
+func (c *EventClient) Use(hooks ...Hook) {
+	c.hooks.Event = append(c.hooks.Event, hooks...)
+}
+
+// Create returns a builder for creating a Event entity.
+func (c *EventClient) Create() *EventCreate {
+	mutation := newEventMutation(c.config, OpCreate)
+	return &EventCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Event entities.
+func (c *EventClient) CreateBulk(builders ...*EventCreate) *EventCreateBulk {
+	return &EventCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Event.
+func (c *EventClient) Update() *EventUpdate {
+	mutation := newEventMutation(c.config, OpUpdate)
+	return &EventUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EventClient) UpdateOne(e *Event) *EventUpdateOne {
+	mutation := newEventMutation(c.config, OpUpdateOne, withEvent(e))
+	return &EventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EventClient) UpdateOneID(id int) *EventUpdateOne {
+	mutation := newEventMutation(c.config, OpUpdateOne, withEventID(id))
+	return &EventUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Event.
+func (c *EventClient) Delete() *EventDelete {
+	mutation := newEventMutation(c.config, OpDelete)
+	return &EventDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EventClient) DeleteOne(e *Event) *EventDeleteOne {
+	return c.DeleteOneID(e.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EventClient) DeleteOneID(id int) *EventDeleteOne {
+	builder := c.Delete().Where(event.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EventDeleteOne{builder}
+}
+
+// Query returns a query builder for Event.
+func (c *EventClient) Query() *EventQuery {
+	return &EventQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Event entity by its id.
+func (c *EventClient) Get(ctx context.Context, id int) (*Event, error) {
+	return c.Query().Where(event.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EventClient) GetX(ctx context.Context, id int) *Event {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *EventClient) Hooks() []Hook {
+	return c.hooks.Event
 }
 
 // ObservacionClient is a client for the Observacion schema.
@@ -427,6 +524,22 @@ func (c *TramiteClient) GetX(ctx context.Context, id uuid.UUID) *Tramite {
 	return obj
 }
 
+// QueryEvents queries the events edge of a Tramite.
+func (c *TramiteClient) QueryEvents(t *Tramite) *EventQuery {
+	query := &EventQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tramite.Table, tramite.FieldID, id),
+			sqlgraph.To(event.Table, event.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tramite.EventsTable, tramite.EventsColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *TramiteClient) Hooks() []Hook {
 	return c.hooks.Tramite
@@ -526,6 +639,22 @@ func (c *UserClient) QueryOwner(u *User) *PasswordTokenQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(passwordtoken.Table, passwordtoken.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, true, user.OwnerTable, user.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTramites queries the tramites edge of a User.
+func (c *UserClient) QueryTramites(u *User) *TramiteQuery {
+	query := &TramiteQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(tramite.Table, tramite.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TramitesTable, user.TramitesColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil

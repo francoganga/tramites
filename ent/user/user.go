@@ -25,6 +25,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// EdgeOwner holds the string denoting the owner edge name in mutations.
 	EdgeOwner = "owner"
+	// EdgeTramites holds the string denoting the tramites edge name in mutations.
+	EdgeTramites = "tramites"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// OwnerTable is the table that holds the owner relation/edge.
@@ -34,6 +36,13 @@ const (
 	OwnerInverseTable = "password_tokens"
 	// OwnerColumn is the table column denoting the owner relation/edge.
 	OwnerColumn = "password_token_user"
+	// TramitesTable is the table that holds the tramites relation/edge.
+	TramitesTable = "tramites"
+	// TramitesInverseTable is the table name for the Tramite entity.
+	// It exists in this package in order to avoid circular dependency with the "tramite" package.
+	TramitesInverseTable = "tramites"
+	// TramitesColumn is the table column denoting the tramites relation/edge.
+	TramitesColumn = "user_tramites"
 )
 
 // Columns holds all SQL columns for user fields.

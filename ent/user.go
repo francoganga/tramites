@@ -35,9 +35,11 @@ type User struct {
 type UserEdges struct {
 	// Owner holds the value of the owner edge.
 	Owner []*PasswordToken `json:"owner,omitempty"`
+	// Tramites holds the value of the tramites edge.
+	Tramites []*Tramite `json:"tramites,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // OwnerOrErr returns the Owner value or an error if the edge
@@ -47,6 +49,15 @@ func (e UserEdges) OwnerOrErr() ([]*PasswordToken, error) {
 		return e.Owner, nil
 	}
 	return nil, &NotLoadedError{edge: "owner"}
+}
+
+// TramitesOrErr returns the Tramites value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) TramitesOrErr() ([]*Tramite, error) {
+	if e.loadedTypes[1] {
+		return e.Tramites, nil
+	}
+	return nil, &NotLoadedError{edge: "tramites"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -121,6 +132,11 @@ func (u *User) assignValues(columns []string, values []any) error {
 // QueryOwner queries the "owner" edge of the User entity.
 func (u *User) QueryOwner() *PasswordTokenQuery {
 	return (&UserClient{config: u.config}).QueryOwner(u)
+}
+
+// QueryTramites queries the "tramites" edge of the User entity.
+func (u *User) QueryTramites() *TramiteQuery {
+	return (&UserClient{config: u.config}).QueryTramites(u)
 }
 
 // Update returns a builder for updating this User.

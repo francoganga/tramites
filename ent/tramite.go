@@ -29,6 +29,28 @@ type Tramite struct {
 	Categoria string `json:"categoria,omitempty"`
 	// Version holds the value of the "version" field.
 	Version int `json:"version,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the TramiteQuery when eager-loading is set.
+	Edges         TramiteEdges `json:"edges"`
+	user_tramites *int
+}
+
+// TramiteEdges holds the relations/edges for other nodes in the graph.
+type TramiteEdges struct {
+	// Events holds the value of the events edge.
+	Events []*Event `json:"events,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// EventsOrErr returns the Events value or an error if the edge
+// was not loaded in eager-loading.
+func (e TramiteEdges) EventsOrErr() ([]*Event, error) {
+	if e.loadedTypes[0] {
+		return e.Events, nil
+	}
+	return nil, &NotLoadedError{edge: "events"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -44,6 +66,8 @@ func (*Tramite) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case tramite.FieldID:
 			values[i] = new(uuid.UUID)
+		case tramite.ForeignKeys[0]: // user_tramites
+			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Tramite", columns[i])
 		}
@@ -101,9 +125,21 @@ func (t *Tramite) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.Version = int(value.Int64)
 			}
+		case tramite.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field user_tramites", value)
+			} else if value.Valid {
+				t.user_tramites = new(int)
+				*t.user_tramites = int(value.Int64)
+			}
 		}
 	}
 	return nil
+}
+
+// QueryEvents queries the "events" edge of the Tramite entity.
+func (t *Tramite) QueryEvents() *EventQuery {
+	return (&TramiteClient{config: t.config}).QueryEvents(t)
 }
 
 // Update returns a builder for updating this Tramite.

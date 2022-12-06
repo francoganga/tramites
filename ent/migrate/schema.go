@@ -8,6 +8,27 @@ import (
 )
 
 var (
+	// EventsColumns holds the columns for the "events" table.
+	EventsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "type", Type: field.TypeString},
+		{Name: "payload", Type: field.TypeJSON},
+		{Name: "tramite_events", Type: field.TypeUUID, Nullable: true},
+	}
+	// EventsTable holds the schema information for the "events" table.
+	EventsTable = &schema.Table{
+		Name:       "events",
+		Columns:    EventsColumns,
+		PrimaryKey: []*schema.Column{EventsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "events_tramites_events",
+				Columns:    []*schema.Column{EventsColumns[3]},
+				RefColumns: []*schema.Column{TramitesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// ObservacionsColumns holds the columns for the "observacions" table.
 	ObservacionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -44,16 +65,25 @@ var (
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "ano_presupuestario", Type: field.TypeInt},
 		{Name: "link", Type: field.TypeString},
-		{Name: "created_at", Type: field.TypeTime, Nullable: true},
-		{Name: "updated_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "categoria", Type: field.TypeString},
 		{Name: "version", Type: field.TypeInt},
+		{Name: "user_tramites", Type: field.TypeInt, Nullable: true},
 	}
 	// TramitesTable holds the schema information for the "tramites" table.
 	TramitesTable = &schema.Table{
 		Name:       "tramites",
 		Columns:    TramitesColumns,
 		PrimaryKey: []*schema.Column{TramitesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "tramites_users_tramites",
+				Columns:    []*schema.Column{TramitesColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
@@ -72,6 +102,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		EventsTable,
 		ObservacionsTable,
 		PasswordTokensTable,
 		TramitesTable,
@@ -80,5 +111,7 @@ var (
 )
 
 func init() {
+	EventsTable.ForeignKeys[0].RefTable = TramitesTable
 	PasswordTokensTable.ForeignKeys[0].RefTable = UsersTable
+	TramitesTable.ForeignKeys[0].RefTable = UsersTable
 }

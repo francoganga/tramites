@@ -519,6 +519,34 @@ func HasOwnerWith(preds ...predicate.PasswordToken) predicate.User {
 	})
 }
 
+// HasTramites applies the HasEdge predicate on the "tramites" edge.
+func HasTramites() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TramitesTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TramitesTable, TramitesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTramitesWith applies the HasEdge predicate on the "tramites" edge with a given conditions (other predicates).
+func HasTramitesWith(preds ...predicate.Tramite) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TramitesInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TramitesTable, TramitesColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.User) predicate.User {
 	return predicate.User(func(s *sql.Selector) {

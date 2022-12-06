@@ -3,6 +3,8 @@
 package tramite
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -23,8 +25,17 @@ const (
 	FieldCategoria = "categoria"
 	// FieldVersion holds the string denoting the version field in the database.
 	FieldVersion = "version"
+	// EdgeEvents holds the string denoting the events edge name in mutations.
+	EdgeEvents = "events"
 	// Table holds the table name of the tramite in the database.
 	Table = "tramites"
+	// EventsTable is the table that holds the events relation/edge.
+	EventsTable = "events"
+	// EventsInverseTable is the table name for the Event entity.
+	// It exists in this package in order to avoid circular dependency with the "event" package.
+	EventsInverseTable = "events"
+	// EventsColumn is the table column denoting the events relation/edge.
+	EventsColumn = "tramite_events"
 )
 
 // Columns holds all SQL columns for tramite fields.
@@ -38,6 +49,12 @@ var Columns = []string{
 	FieldVersion,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "tramites"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"user_tramites",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
@@ -45,10 +62,19 @@ func ValidColumn(column string) bool {
 			return true
 		}
 	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
+			return true
+		}
+	}
 	return false
 }
 
 var (
+	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
+	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
+	DefaultUpdatedAt func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )

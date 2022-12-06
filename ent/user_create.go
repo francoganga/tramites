@@ -11,7 +11,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/francoganga/go_reno2/ent/passwordtoken"
+	"github.com/francoganga/go_reno2/ent/tramite"
 	"github.com/francoganga/go_reno2/ent/user"
+	"github.com/google/uuid"
 )
 
 // UserCreate is the builder for creating a User entity.
@@ -80,6 +82,21 @@ func (uc *UserCreate) AddOwner(p ...*PasswordToken) *UserCreate {
 		ids[i] = p[i].ID
 	}
 	return uc.AddOwnerIDs(ids...)
+}
+
+// AddTramiteIDs adds the "tramites" edge to the Tramite entity by IDs.
+func (uc *UserCreate) AddTramiteIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddTramiteIDs(ids...)
+	return uc
+}
+
+// AddTramites adds the "tramites" edges to the Tramite entity.
+func (uc *UserCreate) AddTramites(t ...*Tramite) *UserCreate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uc.AddTramiteIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -265,6 +282,25 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: passwordtoken.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.TramitesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TramitesTable,
+			Columns: []string{user.TramitesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeUUID,
+					Column: tramite.FieldID,
 				},
 			},
 		}
