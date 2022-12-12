@@ -1,7 +1,6 @@
 package aggregate
 
 import (
-	"database/sql/driver"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -21,22 +20,6 @@ type Event interface {
 }
 
 type Categoria string
-
-type UJson map[string]string
-
-func (j *UJson) Scan(val string) error {
-
-    return json.Unmarshal([]byte(val), &j)
-}
-
-func (pc *UJson) Value() (driver.Value, error) {
-	return json.Marshal(pc)
-}
-
-func NewJson(v map[string]string) UJson {
-    return UJson(v)
-}
-
 
 // type Contratacion
 // type Solicitud
@@ -61,7 +44,6 @@ type Tramite struct {
 type eventID uuid.UUID
 
 type ObservationAdded struct {
-	ID      string
 	Content string
 }
 
@@ -71,7 +53,6 @@ func (e ObservationAdded) String() string {
 }
 
 type TramiteIniciado struct {
-	ID                      string
 	SolicitudContratacionID string
 }
 
@@ -117,7 +98,6 @@ func (t *Tramite) GetID() uuid.UUID {
 
 func (t *Tramite) AddObservation(content string) error {
 	t.raise(&ObservationAdded{
-		ID:      uuid.New().String(),
 		Content: content,
 	})
 
@@ -126,7 +106,6 @@ func (t *Tramite) AddObservation(content string) error {
 
 func (t *Tramite) IniciarTramite(solicitudID string) error {
 	t.raise(&TramiteIniciado{
-		ID:                      uuid.New().String(),
 		SolicitudContratacionID: solicitudID,
 	})
 
