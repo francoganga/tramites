@@ -76,6 +76,9 @@ func (r *DatabaseRepository) Save(ctx context.Context, a aggregate.Tramite) erro
 
 	// TODO: not handling possible error
 	// if exists, _ := r.ORM.Tramite.Query().Where(tramite.ID(a.GetID())).Exist(ctx); !exists {
+
+    tx, err := r.ORM.Tx(ctx)
+
 	if !exists {
 		r.ORM.Tramite.Create().
 			SetID(a.GetID()).
@@ -87,6 +90,19 @@ func (r *DatabaseRepository) Save(ctx context.Context, a aggregate.Tramite) erro
 	}
 
 	for _, e := range a.Events {
+
+
+        switch e := e.(type) {
+        case *aggregate.TramiteIniciado:
+            _, err := r.DB.Exec("UPDATE tramites set estado = 'tramite_iniciado'")
+            fmt.Printf("handling e=%v\n", e)
+
+            if err != nil {
+                tx.Rollback()
+                return err
+            }
+        }
+
 
 		fmt.Printf("processing event=%v\n", e)
 
@@ -100,10 +116,17 @@ func (r *DatabaseRepository) Save(ctx context.Context, a aggregate.Tramite) erro
 		_, err = r.DB.Exec("INSERT INTO events (type, tramite_events, payload) VALUES($1, $2, $3)", e.String(), a.GetID(), j)
 
 		if err != nil {
-			fmt.Printf("error: %v\n", err)
+            tx.Rollback()
 			return err
 		}
+
 	}
+    err = tx.Commit()
+
+    if err != nil {
+        tx.Rollback()
+        return err
+    }
 
 	return nil
 }
