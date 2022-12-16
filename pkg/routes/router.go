@@ -45,7 +45,7 @@ func BuildRouter(c *services.Container) {
 			Timeout: c.Config.App.Timeout,
 		}),
 		session.Middleware(sessions.NewCookieStore([]byte(c.Config.App.EncryptionKey))),
-		middleware.LoadAuthenticatedUser(c.Auth),
+		//middleware.LoadAuthenticatedUser(c.Auth),
 		middleware.ServeCachedPage(c.Cache),
 		echomw.CSRFWithConfig(echomw.CSRFConfig{
 			TokenLookup: "form:csrf",

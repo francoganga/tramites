@@ -1,21 +1,14 @@
 package routes
 
 import (
-	"fmt"
 	"html/template"
 
-	"github.com/francoganga/go_reno2/pkg/aggregate"
 	_ "github.com/francoganga/go_reno2/pkg/aggregate"
 	"github.com/francoganga/go_reno2/pkg/controller"
 
-	"github.com/francoganga/go_reno2/pkg/domain/candidato"
 	_ "github.com/francoganga/go_reno2/pkg/domain/candidato"
-	"github.com/francoganga/go_reno2/pkg/domain/dependencia"
 	_ "github.com/francoganga/go_reno2/pkg/domain/dependencia"
-	"github.com/francoganga/go_reno2/pkg/domain/materia"
 	_ "github.com/francoganga/go_reno2/pkg/domain/materia"
-	"github.com/francoganga/go_reno2/pkg/domain/tramite/database"
-	"github.com/francoganga/go_reno2/pkg/domain/user"
 	_ "github.com/francoganga/go_reno2/pkg/domain/user"
 	"github.com/labstack/echo/v4"
 )
@@ -47,21 +40,6 @@ func (c *about) Get(ctx echo.Context) error {
 	page.Cache.Enabled = false
 	page.Cache.Tags = []string{"page_about", "page:list"}
 
-    repo := database.DatabaseRepository{
-        ORM: c.Container.ORM,
-        DB: c.Container.Database,
-    }
-
-    ms := make([]*materia.Materia, 0)
-
-    a := aggregate.New(candidato.New("franco", "ganga", "asd@mail.com"), 2022, ms, user.New("admin"), &dependencia.Dependencia{Nombre: "ING", AreaSudocu: "aaa", Autorizante: user.New("admin")}, "LAAST")
-
-    a.AddObservation("una observacion2")
-    a.AddObservation("otra")
-    a.IniciarTramite("un uid")
-    fmt.Printf("[GET_AGGREGATE] a=%v", a.PrintEvents())
-
-    repo.Save(ctx.Request().Context(), a)
 
     // ms := make([]*materia.Materia, 0)
 

@@ -1,13 +1,8 @@
 package services
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
-
-	"entgo.io/ent/dialect"
-	entsql "entgo.io/ent/dialect/sql"
-	"entgo.io/ent/dialect/sql/schema"
 
 	// Required by ent
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -15,7 +10,6 @@ import (
 	"github.com/labstack/gommon/log"
 
 	"github.com/francoganga/go_reno2/config"
-	"github.com/francoganga/go_reno2/ent"
 
 	// Require by ent
 	_ "github.com/francoganga/go_reno2/ent/runtime"
@@ -40,13 +34,13 @@ type Container struct {
 	Database *sql.DB
 
 	// ORM stores a client to the ORM
-	ORM *ent.Client
+	//ORM *ent.Client
 
 	// Mail stores an email sending client
 	Mail *MailClient
 
 	// Auth stores an authentication client
-	Auth *AuthClient
+	//Auth *AuthClient
 
 	// TemplateRenderer stores a service to easily render and cache templates
 	TemplateRenderer *TemplateRenderer
@@ -63,8 +57,8 @@ func NewContainer() *Container {
 	c.initWeb()
 	c.initCache()
 	c.initDatabase()
-	c.initORM()
-	c.initAuth()
+	//c.initORM()
+	//c.initAuth()
 	c.initTemplateRenderer()
 	c.initMail()
 	c.initTasks()
@@ -77,9 +71,6 @@ func (c *Container) Shutdown() error {
 		return err
 	}
 	if err := c.Cache.Close(); err != nil {
-		return err
-	}
-	if err := c.ORM.Close(); err != nil {
 		return err
 	}
 	if err := c.Database.Close(); err != nil {
@@ -168,18 +159,11 @@ func (c *Container) initDatabase() {
 }
 
 // initORM initializes the ORM
-func (c *Container) initORM() {
-	drv := entsql.OpenDB(dialect.Postgres, c.Database)
-	c.ORM = ent.NewClient(ent.Driver(drv))
-	if err := c.ORM.Schema.Create(context.Background(), schema.WithAtlas(true)); err != nil {
-		panic(fmt.Sprintf("failed to create database schema: %v", err))
-	}
-}
 
 // initAuth initializes the authentication client
-func (c *Container) initAuth() {
-	c.Auth = NewAuthClient(c.Config, c.ORM)
-}
+// func (c *Container) initAuth() {
+// 	c.Auth = NewAuthClient(c.Config, c.ORM)
+// }
 
 // initTemplateRenderer initializes the template renderer
 func (c *Container) initTemplateRenderer() {

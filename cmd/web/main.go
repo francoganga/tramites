@@ -11,11 +11,44 @@ import (
 
 	"github.com/francoganga/go_reno2/pkg/routes"
 	"github.com/francoganga/go_reno2/pkg/services"
+
+    "github.com/golang-migrate/migrate/v4"
+    "github.com/golang-migrate/migrate/v4/database/pgx"
+    _ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func main() {
 	// Start a new container
 	c := services.NewContainer()
+
+    
+
+    driver, err := pgx.WithInstance(c.Database, &pgx.Config{})
+
+    if err != nil {
+        panic(err)
+    }
+
+    m, err := migrate.NewWithDatabaseInstance("file://migrations", "app", driver)
+
+    if err != nil {
+        panic(err)
+    }
+
+    err = m.Up()
+
+    if err != nil {
+        panic(err)
+    }
+
+
+
+
+
+
+
+
+
 	defer func() {
 		if err := c.Shutdown(); err != nil {
 			c.Web.Logger.Fatal(err)
