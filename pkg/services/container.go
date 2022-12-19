@@ -13,6 +13,9 @@ import (
 
 	// Require by ent
 	_ "github.com/francoganga/go_reno2/ent/runtime"
+
+    "github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
 )
 
 // Container contains all services used by the application and provides an easy way to handle dependency
@@ -32,6 +35,9 @@ type Container struct {
 
 	// Database stores the connection to the database
 	Database *sql.DB
+
+    // Bun DB connection
+    Bun *bun.DB
 
 	// ORM stores a client to the ORM
 	//ORM *ent.Client
@@ -119,6 +125,46 @@ func (c *Container) initCache() {
 
 // initDatabase initializes the database
 // If the environment is set to test, the test database will be used and will be dropped, recreated and migrated
+// func (c *Container) initDatabase() {
+// 	var err error
+//
+// 	getAddr := func(dbName string) string {
+// 		return fmt.Sprintf("postgresql://%s:%s@%s:%d/%s",
+// 			c.Config.Database.User,
+// 			c.Config.Database.Password,
+// 			c.Config.Database.Hostname,
+// 			c.Config.Database.Port,
+// 			dbName,
+// 		)
+// 	}
+//
+// 	c.Database, err = sql.Open("pgx", getAddr(c.Config.Database.Database))
+// 	if err != nil {
+// 		panic(fmt.Sprintf("failed to connect to database: %v", err))
+// 	}
+//
+// 	// Check if this is a test environment
+// 	if c.Config.App.Environment == config.EnvTest {
+// 		// Drop the test database, ignoring errors in case it doesn't yet exist
+// 		_, _ = c.Database.Exec("DROP DATABASE " + c.Config.Database.TestDatabase)
+//
+// 		// Create the test database
+// 		if _, err = c.Database.Exec("CREATE DATABASE " + c.Config.Database.TestDatabase); err != nil {
+// 			panic(fmt.Sprintf("failed to create test database: %v", err))
+// 		}
+//
+// 		// Connect to the test database
+// 		if err = c.Database.Close(); err != nil {
+// 			panic(fmt.Sprintf("failed to close database connection: %v", err))
+// 		}
+// 		c.Database, err = sql.Open("pgx", getAddr(c.Config.Database.TestDatabase))
+// 		if err != nil {
+// 			panic(fmt.Sprintf("failed to connect to database: %v", err))
+// 		}
+// 	}
+// }
+
+
 func (c *Container) initDatabase() {
 	var err error
 
@@ -132,10 +178,13 @@ func (c *Container) initDatabase() {
 		)
 	}
 
-	c.Database, err = sql.Open("pgx", getAddr(c.Config.Database.Database))
+    c.Database, err = sql.Open("pgx", getAddr(c.Config.Database.Database))
 	if err != nil {
 		panic(fmt.Sprintf("failed to connect to database: %v", err))
 	}
+
+    c.Bun = bun.NewDB(c.Database, pgdialect.New())
+
 
 	// Check if this is a test environment
 	if c.Config.App.Environment == config.EnvTest {
@@ -151,12 +200,18 @@ func (c *Container) initDatabase() {
 		if err = c.Database.Close(); err != nil {
 			panic(fmt.Sprintf("failed to close database connection: %v", err))
 		}
-		c.Database, err = sql.Open("pgx", getAddr(c.Config.Database.TestDatabase))
+        c.Database, err = sql.Open("pgx", getAddr(c.Config.Database.TestDatabase))
 		if err != nil {
 			panic(fmt.Sprintf("failed to connect to database: %v", err))
 		}
+
+        c.Bun = bun.NewDB(c.Database, pgdialect.New())
 	}
 }
+
+
+
+
 
 // initORM initializes the ORM
 

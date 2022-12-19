@@ -5,6 +5,8 @@ CREATE TABLE users (
     username varchar unique not null
 );
 
+--bun:split
+
 CREATE TABLE tramites (
     id uuid primary key,
     anoPresupuestario int not null,
