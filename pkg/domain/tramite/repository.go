@@ -17,5 +17,5 @@ var (
 
 type TramiteRepository interface {
     Get(context.Context, uuid.UUID) (aggregate.Tramite, error)
-    Save(aggregate.Tramite) error
+    Save(*aggregate.Tramite) error
 }

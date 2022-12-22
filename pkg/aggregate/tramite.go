@@ -14,6 +14,11 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+    EstadoTramiteIniciado = "tramite_iniciado"
+)
+
+
 type Event interface {
 	isEvent()
 	String() string

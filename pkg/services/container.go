@@ -16,6 +16,8 @@ import (
 
     "github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
+
+    "github.com/uptrace/bun/extra/bundebug"
 )
 
 // Container contains all services used by the application and provides an easy way to handle dependency
@@ -184,6 +186,8 @@ func (c *Container) initDatabase() {
 	}
 
     c.Bun = bun.NewDB(c.Database, pgdialect.New())
+
+    c.Bun.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true), bundebug.FromEnv("BUNDEBUG")))
 
 
 	// Check if this is a test environment

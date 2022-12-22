@@ -9,10 +9,25 @@ CREATE TABLE users (
 
 CREATE TABLE tramites (
     id uuid primary key,
-    anoPresupuestario int not null,
+    ano_presupuestario int not null,
     link varchar not null,
     created_at timestamp not null default now(),
     updated_at timestamp not null default now(),
     categoria varchar not null,
+    version int not null default 0,
+    estado varchar not null default 'borrador',
     user_id uuid references users(id)
+);
+
+CREATE TABLE events (
+    id uuid primary key default uuid_generate_v4(),
+    kind varchar not null,
+    payload jsonb not null,
+    tramite_id uuid references tramites(id)
+);
+
+CREATE TABLE observations (
+    id serial primary key,
+    content varchar not null,
+    tramite_id uuid references tramites(id)
 );
