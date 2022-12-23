@@ -52,73 +52,77 @@ func TestAddTramiteWithEvents(t *testing.T) {
 		Model(tramite).
 		Where("id = ?", a.GetID()).
 		Relation("Events").
-        Relation("Observations").
+		Relation("Observations").
 		Scan(context.Background())
 
 	if err != nil {
 		t.Error("Failed getting new tramite from db")
 	}
 
-    if len(tramite.Events) != 1 {
-        t.Errorf("Tramite should have 1 events but has %d", len(tramite.Events))
-    }
+	if len(tramite.Events) != 1 {
+		t.Errorf("Tramite should have 1 events but has %d", len(tramite.Events))
+	}
 
-    e := tramite.Events[0]
+	e := tramite.Events[0]
 
-    if e.Kind != "ObservationAdded" {
-        t.Errorf("Wrong event type: event should be of type: ObservationAdded, got=%s", e.Kind)
-    }
+	if e.Kind != "ObservationAdded" {
+		t.Errorf("Wrong event type: event should be of type: ObservationAdded, got=%s", e.Kind)
+	}
 
-    if len(tramite.Observations) != 1 {
-        t.Errorf("Wrong quantity of observations: expected 1 got=%d", len(tramite.Observations))
-    }
+	if len(tramite.Observations) != 1 {
+		t.Errorf("Wrong quantity of observations: expected 1 got=%d", len(tramite.Observations))
+	}
 }
 
 func TestIniciarTramite(t *testing.T) {
 
-    c := services.NewContainer()
+	c := services.NewContainer()
 
 	repo := New(c.Bun)
 
 	a := createTramite()
 
-    documentID := uuid.New().String()
+	documentID := uuid.New().String()
 
-    a.IniciarTramite(documentID)
+	err := a.IniciarTramite(documentID)
 
-    err := repo.Save(context.Background(), a)
+	if err != nil {
+		t.Fatalf("Error iniciando tramite: %s", err)
+	}
 
-    if err != nil {
+	err = repo.Save(context.Background(), a)
+
+	if err != nil {
 		t.Errorf("Error saving tramite to db: %s", err)
-    }
+	}
 
-    tramite, err := getFromDBFunc(c)(a.GetID())
+	tramite, err := getFromDBFunc(c)(a.GetID())
 
-    if err != nil {
-        t.Error("failed getting tramite from db")
-    }
+	if err != nil {
+		t.Error("failed getting tramite from db")
+	}
 
-    if len(tramite.Events) != 1 {
-        t.Errorf("Wrong events count expected to have 1, got=%d", len(tramite.Events))
-    }
+	if len(tramite.Events) != 1 {
+		t.Errorf("Wrong events count expected to have 1, got=%d", len(tramite.Events))
+	}
 
-    e := tramite.Events[0]
+	e := tramite.Events[0]
 
-    if e.Kind != "TramiteIniciado" {
-        t.Errorf("Wrong event type expected=TramiteIniciado got=%s", e.Kind)
-    }
+	if e.Kind != "TramiteIniciado" {
+		t.Errorf("Wrong event type expected=TramiteIniciado got=%s", e.Kind)
+	}
 
-    event := &aggregate.TramiteIniciado{}
+	event := &aggregate.TramiteIniciado{}
 
-    err = json.Unmarshal(e.Payload, event)
+	err = json.Unmarshal(e.Payload, event)
 
-    if err != nil {
-        t.Errorf("Failed to Unmarshal event with payload=%s", string(e.Payload))
-    }
+	if err != nil {
+		t.Errorf("Failed to Unmarshal event with payload=%s", string(e.Payload))
+	}
 
-    if event.SolicitudContratacionID != documentID {
-        t.Errorf("Wrong document ID, expected=%s, got=%s", documentID, event.SolicitudContratacionID)
-    }
+	if event.SolicitudContratacionID != documentID {
+		t.Errorf("Wrong document ID, expected=%s, got=%s", documentID, event.SolicitudContratacionID)
+	}
 
 }
 
@@ -140,20 +144,20 @@ func createTramite() *aggregate.Tramite {
 
 func getFromDBFunc(c *services.Container) func(id uuid.UUID) (*models.Tramite, error) {
 
-    return func(id uuid.UUID) (*models.Tramite, error) {
-        tramite := new(models.Tramite)
+	return func(id uuid.UUID) (*models.Tramite, error) {
+		tramite := new(models.Tramite)
 
-        err := c.Bun.NewSelect().
-        Model(tramite).
-        Where("id = ?", id).
-        Relation("Events").
-        Relation("Observations").
-        Scan(context.Background())
+		err := c.Bun.NewSelect().
+			Model(tramite).
+			Where("id = ?", id).
+			Relation("Events").
+			Relation("Observations").
+			Scan(context.Background())
 
-        if err != nil {
-            return &models.Tramite{}, err
-        }
+		if err != nil {
+			return &models.Tramite{}, err
+		}
 
-        return tramite, nil
-    }
+		return tramite, nil
+	}
 }

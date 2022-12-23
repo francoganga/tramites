@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/francoganga/go_reno2/pkg/aggregate"
 	"github.com/francoganga/go_reno2/pkg/domain/candidato"
@@ -73,6 +74,8 @@ func (r *DatabaseRepository) Save(ctx context.Context, a *aggregate.Tramite) err
 		nt.Link = a.Link
 		nt.AnoPresupuestario = a.AnoProsupuestario
 		nt.Estado = a.Estado
+		nt.CreatedAt = a.CreatedAt
+		nt.UpdatedAt = a.UpdatedAt
 
 		obs := make([]*models.Observation, 0)
 		evs := make([]*models.Event, 0)
@@ -165,6 +168,8 @@ func (r *DatabaseRepository) Save(ctx context.Context, a *aggregate.Tramite) err
 				TramiteID: a.GetID(),
 			})
 		}
+
+		nt.UpdatedAt = time.Now()
 
 		j, err := json.Marshal(e)
 
