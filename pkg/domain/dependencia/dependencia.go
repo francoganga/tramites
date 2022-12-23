@@ -8,3 +8,11 @@ type Dependencia struct {
 	AreaSudocu  AreaSudocu
 	Autorizante *user.User
 }
+
+func New(nombre string, areaSudocu string, autorizante *user.User) *Dependencia {
+    return &Dependencia{
+        Nombre: nombre,
+        AreaSudocu: AreaSudocu(areaSudocu),
+        Autorizante: autorizante,
+    }
+}

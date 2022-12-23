@@ -20,6 +20,10 @@ type DatabaseRepository struct {
 	Bun *bun.DB
 }
 
+func New(bun *bun.DB) DatabaseRepository {
+	return DatabaseRepository{Bun: bun}
+}
+
 func (r *DatabaseRepository) Get(ctx context.Context, id string) (aggregate.Tramite, error) {
 
 	tramite := new(models.Tramite)
@@ -71,7 +75,7 @@ func (r *DatabaseRepository) Save(ctx context.Context, a *aggregate.Tramite) err
 		nt.Estado = a.Estado
 
 		obs := make([]*models.Observation, 0)
-        evs := make([]*models.Event, 0)
+		evs := make([]*models.Event, 0)
 
 		for _, e := range a.Events {
 			switch e := e.(type) {
@@ -82,20 +86,20 @@ func (r *DatabaseRepository) Save(ctx context.Context, a *aggregate.Tramite) err
 				})
 			}
 
-            j, err := json.Marshal(e)
+			j, err := json.Marshal(e)
 
-            if err != nil {
-                return err
-            }
+			if err != nil {
+				return err
+			}
 
-            evs = append(evs, &models.Event{
-                Kind: e.String(),
-                TramiteID: a.GetID(),
-                Payload: j,
-            })
+			evs = append(evs, &models.Event{
+				Kind:      e.String(),
+				TramiteID: a.GetID(),
+				Payload:   j,
+			})
 		}
 
-		_, err := r.Bun.NewInsert().
+		_, err := tx.NewInsert().
 			Model(nt).
 			Exec(ctx)
 
@@ -103,49 +107,53 @@ func (r *DatabaseRepository) Save(ctx context.Context, a *aggregate.Tramite) err
 			return err
 		}
 
-		_, err = r.Bun.NewInsert().Model(&obs).Exec(ctx)
+		if len(obs) > 0 {
 
-		if err != nil {
-			return err
+			_, err = tx.NewInsert().Model(&obs).Exec(ctx)
+
+			if err != nil {
+				return err
+			}
 		}
 
-        _, err = r.Bun.NewInsert().Model(&evs).Exec(ctx)
+		if len(evs) > 0 {
 
-        if err != nil {
-            return err
-        }
+			_, err = tx.NewInsert().Model(&evs).Exec(ctx)
+
+			if err != nil {
+				return err
+			}
+		}
 
 		if err = tx.Commit(); err != nil {
 			return err
 		}
 
-        a.Events = nil
+		a.Events = nil
 
 		return nil
 	}
 
-    fmt.Println("existe, updateando")
+	fmt.Println("existe, updateando")
 
-    if len(a.Events) == 0 {
-        fmt.Println("no events returning early")
-        return nil
-    }
+	if len(a.Events) == 0 {
+		fmt.Println("no events returning early")
+		return nil
+	}
 
+	err = tx.NewSelect().
+		Model(nt).
+		Where("id = ?", a.GetID()).
+		Scan(ctx)
 
-    err = r.Bun.NewSelect().
-    Model(nt).
-    Where("id = ?", a.GetID()).
-    Scan(ctx)
+	if err != nil {
+		return err
+	}
 
-    if err != nil {
-        return err
-    }
-    
-
-    fmt.Printf("nt=%v\n", nt)
+	fmt.Printf("nt=%v\n", nt)
 
 	obs := make([]*models.Observation, 0)
-    evs := make([]*models.Event, 0)
+	evs := make([]*models.Event, 0)
 
 	for _, e := range a.Events {
 		switch e := e.(type) {
@@ -158,21 +166,21 @@ func (r *DatabaseRepository) Save(ctx context.Context, a *aggregate.Tramite) err
 			})
 		}
 
-        j, err := json.Marshal(e)
+		j, err := json.Marshal(e)
 
-        if err != nil {
-            return err
-        }
+		if err != nil {
+			return err
+		}
 
-        evs = append(evs, &models.Event{
-            Kind: e.String(),
-            TramiteID: a.GetID(),
-            Payload: j,
-        })
+		evs = append(evs, &models.Event{
+			Kind:      e.String(),
+			TramiteID: a.GetID(),
+			Payload:   j,
+		})
 
 	}
 
-	_, err = r.Bun.NewUpdate().
+	_, err = tx.NewUpdate().
 		Model(nt).
 		WherePK().
 		Exec(ctx)
@@ -181,15 +189,16 @@ func (r *DatabaseRepository) Save(ctx context.Context, a *aggregate.Tramite) err
 		return err
 	}
 
-	_, err = r.Bun.NewInsert().Model(&obs).Exec(ctx)
-
-	if err != nil {
-		return err
+	if len(obs) > 0 {
+		_, err = tx.NewInsert().Model(&obs).Exec(ctx)
+		if err != nil {
+			return err
+		}
 	}
 
-    _, err = r.Bun.NewInsert().Model(&evs).Exec(ctx)
+	_, err = tx.NewInsert().Model(&evs).Exec(ctx)
 
-    if err != nil {
+	if err != nil {
 		return err
 	}
 
@@ -197,8 +206,8 @@ func (r *DatabaseRepository) Save(ctx context.Context, a *aggregate.Tramite) err
 		return err
 	}
 
-    fmt.Println("setting events to nil")
-    a.Events = nil
+	fmt.Println("setting events to nil")
+	a.Events = nil
 
 	return nil
 }
