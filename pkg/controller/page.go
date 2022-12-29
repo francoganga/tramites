@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/francoganga/go_reno2/pkg/context"
+	"github.com/francoganga/go_reno2/pkg/domain/user"
 	"github.com/francoganga/go_reno2/pkg/htmx"
 	"github.com/francoganga/go_reno2/pkg/msg"
-    "github.com/francoganga/go_reno2/pkg/domain/user"
 
 	echomw "github.com/labstack/echo/v4/middleware"
 
