@@ -12,7 +12,6 @@ import (
 	"github.com/francoganga/go_reno2/config"
 
 	// Require by ent
-	_ "github.com/francoganga/go_reno2/ent/runtime"
 
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"

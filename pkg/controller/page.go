@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/francoganga/go_reno2/ent"
 	"github.com/francoganga/go_reno2/pkg/context"
 	"github.com/francoganga/go_reno2/pkg/htmx"
 	"github.com/francoganga/go_reno2/pkg/msg"
+    "github.com/francoganga/go_reno2/pkg/domain/user"
 
 	echomw "github.com/labstack/echo/v4/middleware"
 
@@ -70,7 +70,7 @@ type Page struct {
 	IsAuth bool
 
 	// AuthUser stores the authenticated user
-	AuthUser *ent.User
+	AuthUser *user.User
 
 	// StatusCode stores the HTTP status code that will be returned
 	StatusCode int
@@ -141,7 +141,7 @@ func NewPage(ctx echo.Context) Page {
 
 	if u := ctx.Get(context.AuthenticatedUserKey); u != nil {
 		p.IsAuth = true
-		p.AuthUser = u.(*ent.User)
+		p.AuthUser = u.(*user.User)
 	}
 
 	p.HTMX.Request = htmx.GetRequest(ctx)
