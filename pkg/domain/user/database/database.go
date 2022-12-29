@@ -7,10 +7,8 @@ import (
 	"github.com/francoganga/go_reno2/pkg/domain/user"
 )
 
-
-
 type UserRepository struct {
-    orm *ent.Client
+	orm *ent.Client
 }
 
 func (r *UserRepository) Get(ctx context.Context, id string) (user.User, error) {

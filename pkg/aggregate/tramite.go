@@ -16,17 +16,15 @@ import (
 )
 
 const (
-    EstadoTramiteIniciado = "tramite_iniciado"
+	EstadoTramiteIniciado = "tramite_iniciado"
 )
-
 
 func transitionError(from string, to string) error {
 
-    msg := fmt.Sprintf("Ivalid transition from %+v to %s", from, to)
+	msg := fmt.Sprintf("Ivalid transition from %+v to %s", from, to)
 
-    return errors.New(msg)
+	return errors.New(msg)
 }
-
 
 type Event interface {
 	isEvent()
@@ -103,7 +101,7 @@ func New(
 		Dependencia:       dependencia,
 		Materias:          materias,
 		Categoria:         categoria,
-        Estado: "borrador",
+		Estado:            "borrador",
 	}
 }
 
@@ -121,10 +119,9 @@ func (t *Tramite) AddObservation(content string) error {
 
 func (t *Tramite) IniciarTramite(solicitudID string) error {
 
-    if t.Estado != "borrador" {
-        return transitionError(t.Estado, EstadoTramiteIniciado)
-    }
-
+	if t.Estado != "borrador" {
+		return transitionError(t.Estado, EstadoTramiteIniciado)
+	}
 
 	t.raise(&TramiteIniciado{
 		SolicitudContratacionID: solicitudID,
@@ -142,7 +139,7 @@ func (t *Tramite) On(event Event, new bool) {
 		t.Estado = "tramite_iniciado"
 	}
 
-    t.UpdatedAt = time.Now()
+	t.UpdatedAt = time.Now()
 
 	if !new {
 		t.Version++

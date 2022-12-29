@@ -21,14 +21,14 @@ type Candidato struct {
 }
 
 func New(nombre CandidatoNombre, apellido Apellido, email CandidatoEmail) *Candidato {
-    return &Candidato{
-        Nombre: nombre,
-        Apellido: apellido,
-        Email: email,
-        Archivos: make([]FilePath, 0),
-    }
+	return &Candidato{
+		Nombre:   nombre,
+		Apellido: apellido,
+		Email:    email,
+		Archivos: make([]FilePath, 0),
+	}
 }
 
 func (c *Candidato) AddFile(path FilePath) {
-    c.Archivos = append(c.Archivos, path)
+	c.Archivos = append(c.Archivos, path)
 }

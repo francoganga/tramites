@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/hibiken/asynq"
 	"github.com/francoganga/go_reno2/config"
 	"github.com/francoganga/go_reno2/pkg/tasks"
+	"github.com/hibiken/asynq"
 )
 
 func main() {

@@ -12,8 +12,8 @@ import (
 )
 
 var (
-    _, b, _, _ = runtime.Caller(0)
-    basepath = filepath.Dir(b)
+	_, b, _, _ = runtime.Caller(0)
+	basepath   = filepath.Dir(b)
 )
 
 const (
@@ -134,7 +134,7 @@ type (
 // GetConfig loads and returns configuration
 func GetConfig() (Config, error) {
 
-    // fmt.Printf("ROOT=%v\n", basepath)
+	// fmt.Printf("ROOT=%v\n", basepath)
 	var c Config
 
 	// Load the config file
@@ -144,7 +144,7 @@ func GetConfig() (Config, error) {
 	viper.AddConfigPath("config")
 	viper.AddConfigPath("../config")
 	viper.AddConfigPath("../../config")
-    viper.AddConfigPath(basepath)
+	viper.AddConfigPath(basepath)
 
 	// Load env variables
 	viper.SetEnvPrefix("pagoda")

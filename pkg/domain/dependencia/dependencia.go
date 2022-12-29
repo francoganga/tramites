@@ -10,9 +10,9 @@ type Dependencia struct {
 }
 
 func New(nombre string, areaSudocu string, autorizante *user.User) *Dependencia {
-    return &Dependencia{
-        Nombre: nombre,
-        AreaSudocu: AreaSudocu(areaSudocu),
-        Autorizante: autorizante,
-    }
+	return &Dependencia{
+		Nombre:      nombre,
+		AreaSudocu:  AreaSudocu(areaSudocu),
+		Autorizante: autorizante,
+	}
 }

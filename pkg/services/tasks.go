@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hibiken/asynq"
 	"github.com/francoganga/go_reno2/config"
+	"github.com/hibiken/asynq"
 )
 
 type (

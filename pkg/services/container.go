@@ -14,10 +14,10 @@ import (
 	// Require by ent
 	_ "github.com/francoganga/go_reno2/ent/runtime"
 
-    "github.com/uptrace/bun"
+	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 
-    "github.com/uptrace/bun/extra/bundebug"
+	"github.com/uptrace/bun/extra/bundebug"
 )
 
 // Container contains all services used by the application and provides an easy way to handle dependency
@@ -38,8 +38,8 @@ type Container struct {
 	// Database stores the connection to the database
 	Database *sql.DB
 
-    // Bun DB connection
-    Bun *bun.DB
+	// Bun DB connection
+	Bun *bun.DB
 
 	// ORM stores a client to the ORM
 	//ORM *ent.Client
@@ -166,7 +166,6 @@ func (c *Container) initCache() {
 // 	}
 // }
 
-
 func (c *Container) initDatabase() {
 	var err error
 
@@ -180,15 +179,14 @@ func (c *Container) initDatabase() {
 		)
 	}
 
-    c.Database, err = sql.Open("pgx", getAddr(c.Config.Database.Database))
+	c.Database, err = sql.Open("pgx", getAddr(c.Config.Database.Database))
 	if err != nil {
 		panic(fmt.Sprintf("failed to connect to database: %v", err))
 	}
 
-    c.Bun = bun.NewDB(c.Database, pgdialect.New())
+	c.Bun = bun.NewDB(c.Database, pgdialect.New())
 
-    c.Bun.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true), bundebug.FromEnv("BUNDEBUG")))
-
+	c.Bun.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true), bundebug.FromEnv("BUNDEBUG")))
 
 	// Check if this is a test environment
 	if c.Config.App.Environment == config.EnvTest {
@@ -204,18 +202,14 @@ func (c *Container) initDatabase() {
 		if err = c.Database.Close(); err != nil {
 			panic(fmt.Sprintf("failed to close database connection: %v", err))
 		}
-        c.Database, err = sql.Open("pgx", getAddr(c.Config.Database.TestDatabase))
+		c.Database, err = sql.Open("pgx", getAddr(c.Config.Database.TestDatabase))
 		if err != nil {
 			panic(fmt.Sprintf("failed to connect to database: %v", err))
 		}
 
-        c.Bun = bun.NewDB(c.Database, pgdialect.New())
+		c.Bun = bun.NewDB(c.Database, pgdialect.New())
 	}
 }
-
-
-
-
 
 // initORM initializes the ORM
 

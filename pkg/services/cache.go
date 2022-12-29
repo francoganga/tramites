@@ -9,8 +9,8 @@ import (
 	"github.com/eko/gocache/v2/cache"
 	"github.com/eko/gocache/v2/marshaler"
 	"github.com/eko/gocache/v2/store"
-	"github.com/go-redis/redis/v8"
 	"github.com/francoganga/go_reno2/config"
+	"github.com/go-redis/redis/v8"
 )
 
 type (

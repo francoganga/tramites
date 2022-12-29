@@ -40,38 +40,36 @@ func (c *about) Get(ctx echo.Context) error {
 	page.Cache.Enabled = false
 	page.Cache.Tags = []string{"page_about", "page:list"}
 
+	// ms := make([]*materia.Materia, 0)
 
-    // ms := make([]*materia.Materia, 0)
+	// a := aggregate.New(candidato.New("franco", "ganga", "asd@mail.com"), 2022, ms, user.New("admin"), &dependencia.Dependencia{Nombre: "ING", AreaSudocu: "aaa", Autorizante: user.New("admin")}, "LAAST")
+	//
+	// err := repo.Add(ctx.Request().Context(), a)
+	//
+	// if err != nil {
+	//     return err
+	// }
 
-
-    // a := aggregate.New(candidato.New("franco", "ganga", "asd@mail.com"), 2022, ms, user.New("admin"), &dependencia.Dependencia{Nombre: "ING", AreaSudocu: "aaa", Autorizante: user.New("admin")}, "LAAST")
-    //
-    // err := repo.Add(ctx.Request().Context(), a)
-    //
-    // if err != nil {
-    //     return err
-    // }
-
-    // e, err := c.Container.ORM.Event.Create().SetType("tipo").SetPayload(map[string]string{"asasd": "ddddddddd"}).Save(ctx.Request().Context())
-    //
-    // if err != nil {
-    //     return err
-    // }
-    //
-    // t, err := c.Container.ORM.Tramite.Create().
-    // SetAnoPresupuestario(2022).
-    // SetCategoria("IEI").
-    // SetCreatedAt(time.Now()).
-    // SetLink("22222222").
-    // AddEvents(e).
-    // SetVersion(0).
-    // Save(ctx.Request().Context())
-    //
-    // if err != nil {
-    //     return err
-    // }
-    //
-    // fmt.Printf("t=%v", t)
+	// e, err := c.Container.ORM.Event.Create().SetType("tipo").SetPayload(map[string]string{"asasd": "ddddddddd"}).Save(ctx.Request().Context())
+	//
+	// if err != nil {
+	//     return err
+	// }
+	//
+	// t, err := c.Container.ORM.Tramite.Create().
+	// SetAnoPresupuestario(2022).
+	// SetCategoria("IEI").
+	// SetCreatedAt(time.Now()).
+	// SetLink("22222222").
+	// AddEvents(e).
+	// SetVersion(0).
+	// Save(ctx.Request().Context())
+	//
+	// if err != nil {
+	//     return err
+	// }
+	//
+	// fmt.Printf("t=%v", t)
 
 	// A simple example of how the Data field can contain anything you want to send to the templates
 	// even though you wouldn't normally send markup like this

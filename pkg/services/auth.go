@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt"
 	"github.com/francoganga/go_reno2/config"
 	"github.com/francoganga/go_reno2/ent"
 	"github.com/francoganga/go_reno2/ent/passwordtoken"
 	"github.com/francoganga/go_reno2/ent/user"
 	"github.com/francoganga/go_reno2/pkg/context"
+	"github.com/golang-jwt/jwt"
 
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"

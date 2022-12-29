@@ -15,15 +15,15 @@ import (
 
 func TestMemoryGetTramite(t *testing.T) {
 
-    type testCase struct {
-        name string
-        id   uuid.UUID
-        expectedErr error
-    }
+	type testCase struct {
+		name        string
+		id          uuid.UUID
+		expectedErr error
+	}
 
-    c := candidato.New("candidato1", "apellido1", "test@mail.com")
+	c := candidato.New("candidato1", "apellido1", "test@mail.com")
 
-    ms := make([]*materia.Materia, 0)
+	ms := make([]*materia.Materia, 0)
 
-    a := aggregate.New(&c, 2022, ms, user.New("admin"), &dependencia.Dependencia{Nombre: "ING", AreaSudocu: "aaa", Autorizante: user.New("admin")}, "IEI")
+	a := aggregate.New(&c, 2022, ms, user.New("admin"), &dependencia.Dependencia{Nombre: "ING", AreaSudocu: "aaa", Autorizante: user.New("admin")}, "IEI")
 }

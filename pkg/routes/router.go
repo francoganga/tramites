@@ -61,7 +61,7 @@ func BuildRouter(c *services.Container) {
 
 	// Example routes
 	navRoutes(c, g, ctr)
-    tramiteRoutes(c, g, ctr)
+	tramiteRoutes(c, g, ctr)
 }
 
 func navRoutes(c *services.Container, g *echo.Group, ctr controller.Controller) {
@@ -80,7 +80,8 @@ func navRoutes(c *services.Container, g *echo.Group, ctr controller.Controller) 
 }
 
 func tramiteRoutes(c *services.Container, g *echo.Group, ctr controller.Controller) {
-    tramite := tramite{Controller: ctr}
+	tramite := tramite{Controller: ctr}
 
-    g.GET("/tramite", tramite.Get).Name = "tramite.show"
+	g.GET("/tramite/new", tramite.Get).Name = "tramite.new"
+	g.POST("tramites/new", tramite.Post).Name = "tramite.post"
 }
