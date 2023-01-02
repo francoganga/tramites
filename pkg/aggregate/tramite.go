@@ -15,6 +15,7 @@ import (
 
 const (
 	EstadoTramiteIniciado = "tramite_iniciado"
+	EstadoTramiteBorrador = "borrador"
 )
 
 func transitionError(from string, to string) error {
@@ -76,7 +77,7 @@ func New(
 		Dependencia:       dependencia,
 		Materias:          materias,
 		Categoria:         categoria,
-		Estado:            "borrador",
+		Estado:            EstadoTramiteBorrador,
 	}
 }
 
@@ -94,7 +95,7 @@ func (t *Tramite) AddObservation(content string) error {
 
 func (t *Tramite) IniciarTramite(solicitudID string) error {
 
-	if t.Estado != "borrador" {
+	if t.Estado != EstadoTramiteBorrador {
 		return transitionError(t.Estado, EstadoTramiteIniciado)
 	}
 
