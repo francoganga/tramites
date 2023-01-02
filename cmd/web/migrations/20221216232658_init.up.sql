@@ -23,7 +23,9 @@ CREATE TABLE events (
     id uuid primary key default uuid_generate_v4(),
     kind varchar not null,
     payload jsonb not null,
-    tramite_id uuid references tramites(id)
+    tramite_id uuid references tramites(id),
+    created_at timestamp not null default now(),
+    updated_at timestamp not null default now()
 );
 
 CREATE TABLE observations (
