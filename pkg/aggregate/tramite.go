@@ -14,8 +14,10 @@ import (
 )
 
 const (
-	EstadoTramiteIniciado = "tramite_iniciado"
-	EstadoTramiteBorrador = "borrador"
+	EstadoTramiteIniciado              = "tramite_iniciado"
+	EstadoTramiteBorrador              = "borrador"
+	EstadoDocumentacionSolicitada      = "documentacion_solicitada"
+	EstadoTramiteDocumentacionAceptada = "documentacion_aceptada"
 )
 
 func transitionError(from string, to string) error {
@@ -95,13 +97,25 @@ func (t *Tramite) AddObservation(content string) error {
 
 func (t *Tramite) IniciarTramite(solicitudID string) error {
 
-	if t.Estado != EstadoTramiteBorrador {
+	if t.Estado != EstadoTramiteDocumentacionAceptada {
 		return transitionError(t.Estado, EstadoTramiteIniciado)
 	}
 
 	t.raise(&TramiteIniciado{
 		SolicitudContratacionID: solicitudID,
 	})
+
+	return nil
+}
+
+func (t *Tramite) SolicitarDocumentacion() error {
+
+	if t.Estado != EstadoTramiteBorrador {
+
+		return transitionError(t.Estado, EstadoDocumentacionSolicitada)
+	}
+
+	t.raise(&DocumentacionSolicitada{})
 
 	return nil
 }

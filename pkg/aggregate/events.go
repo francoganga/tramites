@@ -37,6 +37,17 @@ func (e TramiteIniciado) visit(t *Tramite) {
 	t.Estado = "tramite_iniciado"
 }
 
+type DocumentacionSolicitada struct {
+}
+
+func (e DocumentacionSolicitada) isEvent() {}
+func (e DocumentacionSolicitada) String() string {
+	return reflect.TypeOf(e).Name()
+}
+func (e DocumentacionSolicitada) visit(t *Tramite) {
+	//TODO: Should i send mail notification from here????
+}
+
 func (t *Tramite) raise(event Event) {
 	t.Events = append(t.Events, event)
 	t.On(event, true)
