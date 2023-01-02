@@ -124,6 +124,20 @@ func TestIniciarTramite(t *testing.T) {
 		t.Errorf("Wrong document ID, expected=%s, got=%s", documentID, event.SolicitudContratacionID)
 	}
 
+	adb, err := repo.Get(context.Background(), a.GetID().String())
+
+	if err != nil {
+		t.Error("Failed to get aggregate from db")
+	}
+
+	if adb.Estado != aggregate.EstadoTramiteIniciado {
+		t.Errorf("status should be %s, got=%s", aggregate.EstadoTramiteIniciado, adb.Estado)
+	}
+
+	if adb.SolicitudContratacionID != documentID {
+		t.Errorf("Wrong document id, expected=%s, got=%s", documentID, adb.SolicitudContratacionID)
+	}
+
 }
 
 func createTramite() *aggregate.Tramite {
